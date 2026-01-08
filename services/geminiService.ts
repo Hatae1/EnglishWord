@@ -1,24 +1,7 @@
 
-import { GoogleGenAI, Type, Modality } from "@google/genai";
+import { GoogleGenAI, Modality } from "@google/genai";
 import { WordData } from "../types";
-
-// Local pool of ~200 South Korean Elementary 3rd Grade English words
-const ELEMENTARY_WORD_POOL = [
-  "apple", "banana", "bag", "ball", "bear", "bird", "bike", "black", "blue", "book", "box", "boy", "brother", "bus", "cake", 
-  "candy", "cap", "cat", "chair", "cold", "color", "cook", "cup", "dad", "dance", "desk", "dog", "doll", "door", "duck", 
-  "egg", "elephant", "eye", "face", "family", "fan", "fast", "father", "fish", "five", "flower", "food", "foot", "four", 
-  "friend", "frog", "fruit", "game", "garden", "girl", "glass", "go", "good", "grape", "gray", "green", "hair", "hand", 
-  "happy", "hat", "head", "hello", "help", "hen", "hi", "home", "horse", "hot", "house", "ice", "ice cream", "ink", "jam", 
-  "jet", "juice", "jump", "key", "king", "kite", "ladybug", "leg", "lemon", "lion", "long", "love", "lunch", "man", "map", 
-  "milk", "mom", "monkey", "moon", "morning", "mother", "mouth", "name", "net", "night", "nine", "nose", "notebook", "nurse", 
-  "octopus", "old", "one", "orange", "owl", "pan", "panda", "paper", "park", "pen", "pencil", "pet", "piano", "pig", "pink", 
-  "pizza", "play", "pot", "queen", "rabbit", "rain", "red", "rice", "robot", "rock", "room", "rose", "run", "sad", "salt", 
-  "school", "sea", "seven", "ship", "shirt", "shoe", "short", "sing", "sister", "six", "sky", "sleep", "slow", "small", 
-  "snake", "snow", "soap", "sock", "sofa", "song", "soup", "spoon", "star", "student", "sun", "swim", "table", "tall", 
-  "tea", "teacher", "ten", "tiger", "tomato", "toy", "train", "tree", "truck", "turtle", "two", "umbrella", "up", "van", 
-  "vase", "vest", "violet", "walk", "watch", "water", "white", "window", "wing", "wolf", "woman", "wood", "yellow", "zebra", "zoo",
-  "small", "big", "long", "short", "old", "new", "hot", "cold", "good", "bad", "happy", "sad", "hungry", "thirsty", "tired"
-];
+import { WORD_POOL } from "../data/wordPool";
 
 // Helper to decode base64 string
 function decode(base64: string): Uint8Array {
@@ -52,35 +35,9 @@ async function decodeAudioData(
 }
 
 export const fetchRandomWords = async (): Promise<WordData[]> => {
-  const shuffled = [...ELEMENTARY_WORD_POOL].sort(() => 0.5 - Math.random());
-  const selectedWords = shuffled.slice(0, 5);
-
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
-  
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: `For these 5 English words: [${selectedWords.join(", ")}], provide one very simple English example sentence for each. Do not provide any Korean translations.`,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.ARRAY,
-        items: {
-          type: Type.OBJECT,
-          properties: {
-            word: { type: Type.STRING },
-            example: { type: Type.STRING, description: 'A very simple English sentence' }
-          },
-          required: ["word", "example"]
-        }
-      }
-    }
-  });
-
-  const text = response.text;
-  if (!text) throw new Error("No words generated");
-  
-  const results: WordData[] = JSON.parse(text);
-  return results;
+  // 로컬 풀에서 무작위로 5개 선택
+  const shuffled = [...WORD_POOL].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, 5);
 };
 
 export const speakWord = async (word: string, audioContext: AudioContext): Promise<void> => {
